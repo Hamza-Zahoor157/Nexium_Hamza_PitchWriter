@@ -29,6 +29,7 @@ import {
   ChevronRight
 } from "lucide-react"
 import Link from 'next/link'
+import { generatePitch, type PitchResponse } from '@/lib/n8n-chat';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,8 +38,8 @@ const supabase = createClient(
 
 export default function PitchPage() {
   const [idea, setIdea] = useState('')
-  const [response, setResponse] = useState(null)
-  const [pitches, setPitches] = useState<{ idea: string;/* response: any*/ }[]>([])
+  const [response, setResponse] = useState<PitchResponse | null>(null)
+  const [pitches, setPitches] = useState<Array<{ _id: string; idea: string; response: PitchResponse; createdAt?: string }>>([])
   const [token, setToken] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -97,36 +98,70 @@ export default function PitchPage() {
       return
     }
 
+    if (!idea.trim()) {
+      alert('Please enter a startup idea.')
+      return
+    }
+
     setLoading(true)
 
-    const res = await fetch('/api/pitch/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ idea, userId }),
-    })
+    try {
+      // Step 1: Get pitch from n8n
+      const pitchResponse = await generatePitch(idea);
+      
+      if (!pitchResponse) {
+        throw new Error('Failed to generate pitch. Please try again.');
+      }
+      
+      // Step 2: Save to your database
+      const res = await fetch('/api/pitch/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          idea, 
+          userId,
+          response: pitchResponse
+        }),
+      });
 
-    const data = await res.json()
-    setResponse(data.data.response)
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to save pitch');
+      }
 
-    setPitches(prev => [{ idea, response: data.data.response }, ...prev])
-    setIdea('')
-    setLoading(false)
-  }
+      const { data } = await res.json();
+      
+      // Step 3: Update UI with the response
+      setResponse(pitchResponse);
+      setPitches(prev => [{
+        _id: data._id,
+        idea,
+        response: pitchResponse,
+        createdAt: new Date().toISOString()
+      }, ...prev]);
+      setIdea('');
+    } catch (error) {
+      console.error('Error generating pitch:', error);
+      alert('Failed to generate pitch. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredPitches = pitches.filter(pitch => {
     const searchLower = searchTerm.toLowerCase()
     return (
-      pitch.idea.toLowerCase().includes(searchLower) /*||
+      pitch.idea.toLowerCase().includes(searchLower) ||
       (pitch.response?.title && pitch.response.title.toLowerCase().includes(searchLower)) ||
       (pitch.response?.problem && pitch.response.problem.toLowerCase().includes(searchLower)) ||
       (pitch.response?.solution && pitch.response.solution.toLowerCase().includes(searchLower)) ||
       (pitch.response?.targetMarket && pitch.response.targetMarket.toLowerCase().includes(searchLower)) ||
       (pitch.response?.revenueModel && pitch.response.revenueModel.toLowerCase().includes(searchLower)) ||
       (pitch.response?.callToAction && pitch.response.callToAction.toLowerCase().includes(searchLower))
-    */)
+    )
   })
 
   return (
@@ -287,7 +322,7 @@ export default function PitchPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-700 leading-relaxed">
-                      {/*response.problem || */"Generated content will appear here..."}
+                      {response.problem || "Generated content will appear here..."}
                     </p>
                   </CardContent>
                 </Card>
@@ -302,7 +337,7 @@ export default function PitchPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-700 leading-relaxed">
-                      {/*response.solution ||*/ "Generated content will appear here..."}
+                      {response.solution || "Generated content will appear here..."}
                     </p>
                   </CardContent>
                 </Card>
@@ -317,7 +352,7 @@ export default function PitchPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-700 leading-relaxed">
-                      {/*response.targetMarket || */"Generated content will appear here..."}
+                      {response.targetMarket || "Generated content will appear here..."}
                     </p>
                   </CardContent>
                 </Card>
@@ -332,7 +367,7 @@ export default function PitchPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-700 leading-relaxed">
-                      {/*response.revenueModel || */"Generated content will appear here..."}
+                      {response.revenueModel || "Generated content will appear here..."}
                     </p>
                   </CardContent>
                 </Card>
@@ -347,7 +382,7 @@ export default function PitchPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-700 leading-relaxed">
-                      {/*response.callToAction ||*/ "Generated content will appear here..."}
+                      {response.callToAction || "Generated content will appear here..."}
                     </p>
                   </CardContent>
                 </Card>
