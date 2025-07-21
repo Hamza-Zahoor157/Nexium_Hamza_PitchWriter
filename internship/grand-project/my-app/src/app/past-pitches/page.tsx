@@ -34,7 +34,23 @@ const supabase = createClient(
 )
 
 export default function PastPitchesPage() {
-  const [pitches, setPitches] = useState<{ idea: string; response: any; createdAt?: string }[]>([])
+  interface Pitch {
+    _id: string;
+    userId: string;
+    idea: string;
+    response: {
+      title?: string;
+      description?: string;
+      problem?: string;
+      solution?: string;
+      targetMarket?: string;
+      revenueModel?: string;
+      callToAction?: string;
+    };
+    createdAt?: string;
+  }
+
+  const [pitches, setPitches] = useState<Pitch[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -245,42 +261,64 @@ export default function PastPitchesPage() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredPitches.map((pitch, index) => (
-                    <Card 
-                      key={index} 
-                      className="hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-blue-500"
-                      onClick={() => setSelectedPitch(pitch)}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-base font-medium text-blue-600 line-clamp-2">
-                            {pitch.response?.title || pitch.idea}
-                          </CardTitle>
-                          <Badge variant="outline" className="text-xs ml-2">
-                            {index < 3 ? 'Recent' : 'Older'}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription className="line-clamp-3 mb-3">
-                          {pitch.response?.problem || pitch.idea}
-                        </CardDescription>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <div className="flex items-center">
-                            <Calendar className="mr-1 h-3 w-3" />
-                            {pitch.createdAt 
-                              ? new Date(pitch.createdAt).toLocaleDateString()
-                              : new Date().toLocaleDateString()
-                            }
+                  {filteredPitches.map((pitch, index) => {
+                    // Safely access response data with fallbacks
+                    const response = pitch.response || {};
+                    const title = response.title || 'App Name';
+                    const problem = response.problem || 'No problem statement available';
+                    const solution = response.solution || 'No solution details available';
+                    const targetMarket = response.targetMarket || 'Target market not specified';
+                    const revenueModel = response.revenueModel || 'Revenue model not specified';
+                    const callToAction = response.callToAction || 'Contact us for more information';
+                    
+                    return (
+                      <Card 
+                        key={pitch._id || index} 
+                        className="hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-blue-500"
+                        onClick={() => setSelectedPitch({
+                          ...pitch,
+                          response: {
+                            title,
+                            problem,
+                            solution,
+                            targetMarket,
+                            revenueModel,
+                            callToAction,
+                            description: response.description || ''
+                          }
+                        })}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <CardTitle className="text-base font-medium text-blue-600 line-clamp-2">
+                              {title}
+                            </CardTitle>
+                            <Badge variant="outline" className="text-xs ml-2">
+                              {index < 3 ? 'Recent' : 'Older'}
+                            </Badge>
                           </div>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-blue-600 hover:text-blue-700">
-                            <Eye className="mr-1 h-3 w-3" />
-                            View
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardHeader>
+                        <CardContent>
+                          <CardDescription className="line-clamp-3 mb-3">
+                            {problem || pitch.idea}
+                          </CardDescription>
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <div className="flex items-center">
+                              <Calendar className="mr-1 h-3 w-3" />
+                              {pitch.createdAt 
+                                ? new Date(pitch.createdAt).toLocaleDateString()
+                                : new Date().toLocaleDateString()
+                              }
+                            </div>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-blue-600 hover:text-blue-700">
+                              <Eye className="mr-1 h-3 w-3" />
+                              View
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -292,7 +330,7 @@ export default function PastPitchesPage() {
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-2xl font-bold text-gray-900">
-                        {selectedPitch.response?.title || selectedPitch.idea}
+                        {selectedPitch.response?.title || selectedPitch.idea || 'App Name'}
                       </h2>
                       <Button
                         variant="ghost"

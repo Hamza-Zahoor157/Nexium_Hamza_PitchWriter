@@ -8,10 +8,41 @@ export interface PitchResponse {
   callToAction: string;
 }
 
+export function isValidPitchResponse(data: any): data is PitchResponse {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+  
+  const requiredFields: (keyof PitchResponse)[] = [
+    'title', 'description', 'problem', 'solution', 
+    'targetMarket', 'revenueModel', 'callToAction'
+  ];
+  
+  // Check if all required fields exist and are non-empty strings
+  const hasAllFields = requiredFields.every(field => {
+    const value = data[field];
+    return typeof value === 'string' && value.trim() !== '';
+  });
+  
+  if (!hasAllFields) {
+    console.warn('Missing or invalid fields in pitch response:', {
+      hasTitle: !!data.title,
+      hasDescription: !!data.description,
+      hasProblem: !!data.problem,
+      hasSolution: !!data.solution,
+      hasTargetMarket: !!data.targetMarket,
+      hasRevenueModel: !!data.revenueModel,
+      hasCallToAction: !!data.callToAction
+    });
+  }
+  
+  return hasAllFields;
+}
+
 function parsePitchFromText(text: string): PitchResponse {
   // Default values
   const result: PitchResponse = {
-    title: 'Untitled Pitch',
+    title: 'App Name',
     description: '',
     problem: 'Not specified',
     solution: 'Not specified',
@@ -20,48 +51,82 @@ function parsePitchFromText(text: string): PitchResponse {
     callToAction: 'Not specified',
   };
 
+  if (!text) return result;
+
   try {
-    // Extract title (first line after the first ** or the first line)
-    const titleMatch = text.match(/\*\*(.*?)\*\*/) || text.match(/^(.+?)[\n\r]/);
+    try {
+      const jsonData = JSON.parse(text);
+      if (jsonData && typeof jsonData === 'object') {
+        if (isValidPitchResponse(jsonData)) {
+          return jsonData as PitchResponse;
+        }
+        return {
+          title: jsonData.title || result.title,
+          description: jsonData.description || jsonData.summary || result.description,
+          problem: jsonData.problem || jsonData.issue || result.problem,
+          solution: jsonData.solution || jsonData.answer || result.solution,
+          targetMarket: jsonData.targetMarket || jsonData.market || result.targetMarket,
+          revenueModel: jsonData.revenueModel || jsonData.businessModel || result.revenueModel,
+          callToAction: jsonData.callToAction || jsonData.cta || result.callToAction
+        };
+      }
+    } catch (e) {
+    }
+
+    const titleMatch = text.match(/\*\*(.*?)\*\*/) || text.match(/^#?\s*(.+?)[\n\r]/);
     if (titleMatch) {
       result.title = titleMatch[1]?.trim() || result.title;
     }
 
-    // Extract problem (between **Problem:** and **Solution:**)
-    const problemMatch = text.match(/\*\*Problem:\*\*([\s\S]*?)(?=\*\*Solution:|$)/i);
-    if (problemMatch) {
-      result.problem = problemMatch[1].trim();
-    }
+    const extractSection = (pattern: RegExp, fallback: string = '') => {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        return match[1]
+          .replace(/\*\*/g, '')  
+          .replace(/^[\s\-*]+/, '')  
+          .trim();
+      }
+      return fallback;
+    };
 
-    // Extract solution (between **Solution:** and next header or end)
-    const solutionMatch = text.match(/\*\*Solution:\*\*([\s\S]*?)(?=\*\*\w+:|$)/i);
-    if (solutionMatch) {
-      result.solution = solutionMatch[1].trim();
-    }
+    result.problem = extractSection(
+      /(?:problem|issue)[:\*\s]*([\s\S]*?)(?=\n\s*\*\*(?:solution|target|revenue|call|$)|$)/i,
+      result.problem
+    );
 
-    // Extract target market (if present)
-    const targetMarketMatch = text.match(/\*\*Target Market:\*\*([\s\S]*?)(?=\*\*\w+:|$)/i);
-    if (targetMarketMatch) {
-      result.targetMarket = targetMarketMatch[1].trim();
-    }
+    result.solution = extractSection(
+      /(?:solution|answer)[:\*\s]*([\s\S]*?)(?=\n\s*\*\*(?:target|revenue|call|$)|$)/i,
+      result.solution
+    );
+    
+    result.targetMarket = extractSection(
+      /(?:target\s*market|audience|market)[:\*\s]*([\s\S]*?)(?=\n\s*\*\*(?:revenue|call|$)|$)/i,
+      result.targetMarket
+    );
 
-    // Extract revenue model (if present)
-    const revenueModelMatch = text.match(/\*\*Revenue Model:\*\*([\s\S]*?)(?=\*\*\w+:|$)/i);
-    if (revenueModelMatch) {
-      result.revenueModel = revenueModelMatch[1].trim();
-    }
+    result.revenueModel = extractSection(
+      /(?:revenue\s*model|business\s*model|monetization)[:\*\s]*([\s\S]*?)(?=\n\s*\*\*(?:call|$)|$)/i,
+      result.revenueModel
+    );
 
-    // Extract call to action (if present)
-    const ctaMatch = text.match(/\*\*Call to Action:\*\*([\s\S]*?)(?=\*\*\w+:|$)/i);
-    if (ctaMatch) {
-      result.callToAction = ctaMatch[1].trim();
-    }
+    result.callToAction = extractSection(
+      /(?:call\s*to\s*action|cta|next\s*steps|get\s*started)[:\*\s]*([\s\S]*?)(?=\n\s*\*\*|$)/i,
+      result.callToAction
+    );
 
-    // Use the first paragraph as description if not found elsewhere
     if (!result.description) {
-      const firstParagraph = text.split('\n\n').find(p => p.trim().length > 0);
+      const firstParagraph = text.split('\n\n').find(p => {
+        const trimmed = p.trim();
+        return trimmed.length > 0 && !trimmed.startsWith('**') && !trimmed.match(/^[#\-*]/);
+      });
+      
       if (firstParagraph) {
-        result.description = firstParagraph.replace(/\*\*/g, '').trim();
+        result.description = firstParagraph
+          .replace(/\*\*/g, '')
+          .replace(/^[#\-*\s]+/, '')
+          .trim();
+      } else {
+        result.description = text.replace(/[#*_-]/g, '').substring(0, 150).trim() + '...';
       }
     }
   } catch (error) {
@@ -71,11 +136,7 @@ function parsePitchFromText(text: string): PitchResponse {
   return result;
 }
 
-/**
- * Sends a message to the n8n chat workflow and returns the pitch response
- * @param message The startup idea or message to send to n8n
- * @returns Promise with the pitch response or null if failed
- */
+
 export async function getN8nChatResponse(message: string): Promise<PitchResponse | null> {
   if (!process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL) {
     console.error('NEXT_PUBLIC_N8N_WEBHOOK_URL is not set');
@@ -85,9 +146,8 @@ export async function getN8nChatResponse(message: string): Promise<PitchResponse
   console.log('Sending request to n8n with message:', message);
   console.log('Webhook URL:', process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL);
 
-  // Add a timeout to the fetch request
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
   try {
     const response = await fetch(process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL, {
@@ -97,8 +157,8 @@ export async function getN8nChatResponse(message: string): Promise<PitchResponse
         'Accept': 'application/json',
       },
       body: JSON.stringify({
-        chatInput: message.trim(), // AI Agent node expects 'chatInput' field
-        message: message.trim(),   // Keep for backward compatibility
+        chatInput: message.trim(),
+        message: message.trim(),
         sessionId: `session_${Date.now()}`,
         timestamp: new Date().toISOString(),
       }),
@@ -109,99 +169,136 @@ export async function getN8nChatResponse(message: string): Promise<PitchResponse
     
     console.log('n8n response status:', response.status);
     
-    // Define the response data type
-    let data: Partial<PitchResponse> = {};
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('n8n API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        response: errorText,
+      });
+      throw new Error(`n8n API error: ${response.status} - ${response.statusText}`);
+    }
     
-    try {
-      // First check for HTTP errors
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('n8n API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          response: errorText,
-        });
-        throw new Error(`n8n API error: ${response.status} - ${response.statusText}`);
-      }
+    const responseData = await response.json();
+    console.log('Raw n8n response:', JSON.stringify(responseData, null, 2));
+    
+    console.log('Processing n8n response:', JSON.stringify(responseData, null, 2));
+    
+    if (isValidPitchResponse(responseData)) {
+      return responseData as PitchResponse;
+    }
+    
+    if (Array.isArray(responseData) && responseData.length > 0) {
+      const firstItem = responseData[0];
       
-      // Parse the response as JSON
-      const responseData = await response.json();
-      console.log('Raw n8n response:', responseData);
-      
-      // Extract the data based on the response format
-      if (Array.isArray(responseData) && responseData.length > 0) {
-        // Handle n8n format with response.output
-        if (responseData[0]?.response?.output) {
-          data = responseData[0].response.output;
-        } else {
-          // Use the first item directly if it's an array
-          data = responseData[0];
+      if (firstItem.output) {
+        if (isValidPitchResponse(firstItem.output)) {
+          return firstItem.output;
         }
-      } else if (responseData && typeof responseData === 'object') {
-        // Use the response directly if it's an object
-        data = responseData;
-      } else {
-        throw new Error('Unexpected response format from n8n');
+        if (typeof firstItem.output === 'string') {
+          try {
+            const parsedOutput = JSON.parse(firstItem.output);
+            if (isValidPitchResponse(parsedOutput)) {
+              return parsedOutput;
+            }
+          } catch (e) {
+            console.log('Could not parse output as JSON, will try as text');
+          }
+        }
       }
       
-      console.log('Extracted pitch data:', data);
-      
-      // Validate the extracted data has required fields
-      if (!data || typeof data !== 'object') {
-        throw new Error('Invalid response format from n8n');
+      if (isValidPitchResponse(firstItem)) {
+        return firstItem;
       }
       
-      // Ensure all required fields are present with proper types
-      const requiredFields: (keyof PitchResponse)[] = [
-        'title', 'description', 'problem', 'solution', 
-        'targetMarket', 'revenueModel', 'callToAction'
-      ];
+      if (typeof firstItem === 'string') {
+        return parsePitchFromText(firstItem);
+      }
+    }
+    
+    if (responseData && typeof responseData === 'object') {
+      if (responseData.output) {
+        if (isValidPitchResponse(responseData.output)) {
+          return responseData.output;
+        }
+        if (typeof responseData.output === 'string') {
+          try {
+            const parsedOutput = JSON.parse(responseData.output);
+            if (isValidPitchResponse(parsedOutput)) {
+              return parsedOutput;
+            }
+          } catch (e) {
+            console.log('Could not parse output as JSON, will try as text');
+            return parsePitchFromText(responseData.output);
+          }
+        }
+      }
       
-      // Create a new PitchResponse with default values
-      const validatedData: PitchResponse = {
-        title: data.title || 'Untitled',
-        description: data.description || 'No description available',
-        problem: data.problem || 'Not specified',
-        solution: data.solution || 'Not specified',
-        targetMarket: data.targetMarket || 'Not specified',
-        revenueModel: data.revenueModel || 'Not specified',
-        callToAction: data.callToAction || 'Not specified'
+      if (isValidPitchResponse(responseData)) {
+        return responseData as PitchResponse;
+      }
+    }
+    
+    console.warn('Could not find valid pitch data in response, trying to parse as text');
+    const pitchText = typeof responseData === 'string' 
+      ? responseData 
+      : JSON.stringify(responseData);
+    
+    console.log('Extracted pitch text:', pitchText);
+    
+    if (pitchText) {
+      const pitchTextStr = String(pitchText);
+      console.log('Extracted pitch text:', pitchTextStr.substring(0, Math.min(200, pitchTextStr.length)) + (pitchTextStr.length > 200 ? '...' : ''));
+      
+      let parsedPitch: PitchResponse;
+      try {
+        const potentialJson = pitchText.trim();
+        if ((potentialJson.startsWith('{') && potentialJson.endsWith('}')) || 
+            (potentialJson.startsWith('[') && potentialJson.endsWith(']'))) {
+          const jsonData = JSON.parse(potentialJson);
+          if (isValidPitchResponse(jsonData)) {
+            return jsonData;
+          }
+        }
+      } catch (e) {
+        console.log('Response is not valid JSON, parsing as text');
+      }
+      
+      parsedPitch = parsePitchFromText(pitchText);
+      console.log('Parsed pitch:', JSON.stringify(parsedPitch, null, 2));
+      
+      const result: PitchResponse = {
+        title: parsedPitch.title || 'Untitled Pitch',
+        description: parsedPitch.description || `Summary of: ${message}`,
+        problem: parsedPitch.problem || 'No problem statement provided.',
+        solution: parsedPitch.solution || 'No solution details provided.',
+        targetMarket: parsedPitch.targetMarket || 'Target market not specified.',
+        revenueModel: parsedPitch.revenueModel || 'Revenue model not specified.',
+        callToAction: parsedPitch.callToAction || 'Contact us for more information.'
       };
       
-      return validatedData;
-    } catch (error) {
-      console.error('Error processing n8n response:', error);
-      throw error;
+      return result;
+    } else {
+      console.log('Extracted pitch data:', responseData);
+      
+      console.warn('Could not extract valid pitch data from response');
+      
+      return {
+        title: 'Generated Pitch',
+        description: `Here's a pitch for: ${message}`,
+        problem: `The problem that ${message} solves...`,
+        solution: `How ${message} provides value...`,
+        targetMarket: 'Your target customers...',
+        revenueModel: 'How this will make money...',
+        callToAction: 'What you want the user to do next...'
+      };
     }
   } catch (error) {
     console.error('Error in getN8nChatResponse:', error);
-    throw error; // Re-throw to be handled by the caller
+    return null;
   }
 }
 
-/**
- * Type guard to validate if an object matches our PitchResponse interface
- */
-function isValidPitchResponse(data: any): data is PitchResponse {
-  const requiredFields: (keyof PitchResponse)[] = [
-    'title', 'description', 'problem', 'solution', 
-    'targetMarket', 'revenueModel', 'callToAction'
-  ];
-  
-  return (
-    data &&
-    typeof data === 'object' &&
-    requiredFields.every(field => 
-      typeof data[field] === 'string' && data[field].trim() !== ''
-    )
-  );
-}
-
-/**
- * Gets a pitch from n8n chat workflow with error handling and fallback
- * @param idea The startup idea to generate a pitch for
- * @returns Promise with the pitch response
- */
 export async function generatePitch(idea: string): Promise<PitchResponse> {
   console.log('getPitchFromN8n called with idea:', idea);
   const response = await getN8nChatResponse(idea);

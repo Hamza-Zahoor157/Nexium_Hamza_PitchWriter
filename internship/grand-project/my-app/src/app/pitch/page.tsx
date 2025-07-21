@@ -91,29 +91,28 @@ export default function PitchPage() {
   }, [userId])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!token) {
-      alert('Please log in first.')
-      return
+    e.preventDefault();
+  
+    if (!token || !userId) {
+      alert('Please log in first.');
+      return;
     }
-
+  
     if (!idea.trim()) {
-      alert('Please enter a startup idea.')
-      return
+      alert('Please enter a startup idea.');
+      return;
     }
-
-    setLoading(true)
-
+  
+    setLoading(true);
+  
     try {
-      // Step 1: Get pitch from n8n
+      // Generate pitch
       const pitchResponse = await generatePitch(idea);
-      
       if (!pitchResponse) {
-        throw new Error('Failed to generate pitch. Please try again.');
+        throw new Error('Failed to generate pitch');
       }
-      
-      // Step 2: Save to your database
+  
+      // Save to database
       const res = await fetch('/api/pitch/create', {
         method: 'POST',
         headers: {
@@ -122,35 +121,35 @@ export default function PitchPage() {
         },
         body: JSON.stringify({ 
           idea, 
-          userId,
-          response: pitchResponse
+          response: pitchResponse,
+          userId
         }),
       });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to save pitch');
-      }
-
-      const { data } = await res.json();
+  
+      const result = await res.json();
       
-      // Step 3: Update UI with the response
+      if (!res.ok) {
+        throw new Error(result.error || 'Failed to save pitch');
+      }
+  
+      // Update UI
       setResponse(pitchResponse);
       setPitches(prev => [{
-        _id: data._id,
-        idea,
-        response: pitchResponse,
-        createdAt: new Date().toISOString()
+        _id: result.data._id,
+        userId: result.data.userId,
+        idea: result.data.idea,
+        response: result.data.response,
+        createdAt: result.data.createdAt
       }, ...prev]);
       setIdea('');
+      
     } catch (error) {
       console.error('Error generating pitch:', error);
-      alert('Failed to generate pitch. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to generate pitch');
     } finally {
       setLoading(false);
     }
   };
-
   const filteredPitches = pitches.filter(pitch => {
     const searchLower = searchTerm.toLowerCase()
     return (
