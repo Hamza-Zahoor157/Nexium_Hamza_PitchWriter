@@ -138,19 +138,19 @@ function parsePitchFromText(text: string): PitchResponse {
 
 
 export async function getN8nChatResponse(message: string): Promise<PitchResponse | null> {
-  if (!process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL) {
-    console.error('NEXT_PUBLIC_N8N_WEBHOOK_URL is not set');
+  if (!process.env.NEXT_PUBLIC_CHATBOT_URL) {
+    console.error('NEXT_PUBLIC_CHATBOT_URL is not set');
     return null;
   }
 
   console.log('Sending request to n8n with message:', message);
-  console.log('Webhook URL:', process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL);
+  console.log('Webhook URL:', process.env.NEXT_PUBLIC_CHATBOT_URL);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
   try {
-    const response = await fetch(process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL, {
+    const response = await fetch(process.env.NEXT_PUBLIC_CHATBOT_URL!, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
