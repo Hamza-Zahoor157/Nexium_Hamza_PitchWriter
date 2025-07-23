@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongo'
 import Pitch from '@/models/Pitch'
-import { getGPTPitch } from '@/lib/gpt'
+import { getGPTPitch } from '@/ai/gpt'
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

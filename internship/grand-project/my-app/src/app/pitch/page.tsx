@@ -29,7 +29,7 @@ import {
   ChevronRight
 } from "lucide-react"
 import Link from 'next/link'
-import { generatePitch, type PitchResponse } from '@/lib/n8n-chat';
+import { generatePitch, type PitchResponse } from '@/ai/n8n-chat';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

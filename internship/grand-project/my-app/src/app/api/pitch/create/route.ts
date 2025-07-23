@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongo'
 import Pitch from '@/models/Pitch'
-import { generatePitch, type PitchResponse, isValidPitchResponse } from '@/lib/n8n-chat'
+import { generatePitch, type PitchResponse, isValidPitchResponse } from '@/ai/n8n-chat'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
