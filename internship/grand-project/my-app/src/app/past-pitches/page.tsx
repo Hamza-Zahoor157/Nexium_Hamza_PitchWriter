@@ -24,7 +24,9 @@ import {
   Zap,
   ArrowLeft,
   Calendar,
-  Eye
+  Eye,
+  Menu,
+  X
 } from "lucide-react"
 import Link from 'next/link'
 
@@ -55,6 +57,7 @@ export default function PastPitchesPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPitch, setSelectedPitch] = useState<any>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -109,64 +112,68 @@ export default function PastPitchesPage() {
   )
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-sm border-r border-gray-200">
+      <div className={`${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } fixed lg:relative lg:translate-x-0 z-50 w-64 bg-card shadow-sm border-r border-border transition-transform duration-300 ease-in-out lg:flex lg:flex-col h-full`}>
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <div className="p-2 bg-blue-500 rounded-lg">
-              <PenTool className="h-5 w-5 text-white" />
+        <div className="p-4 lg:p-6 border-b border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-primary rounded-lg">
+                <PenTool className="h-4 w-4 lg:h-5 lg:w-5 text-primary-foreground" />
+              </div>
+              <span className="text-lg lg:text-xl font-bold text-foreground">Pitch Writer</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">Pitch Writer</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-1">
           <div className="space-y-1">
             <Link href="/pitch">
-              <Button variant="ghost" className="w-full justify-start text-gray-600 hover:bg-gray-100">
+              <Button variant="ghost" className="w-full justify-start text-foreground hover:bg-accent cursor-pointer text-sm lg:text-base">
                 <Plus className="mr-3 h-4 w-4" />
                 New Pitch
               </Button>
             </Link>
-            <Button variant="ghost" className="w-full justify-start text-gray-600">
-              <Home className="mr-3 h-4 w-4" />
-              Dashboard
-            </Button>
             <Button
               variant="ghost"
-              className="w-full justify-start bg-blue-50 text-blue-700 hover:bg-blue-100"
+              className="w-full justify-start bg-accent text-accent-foreground hover:bg-accent/80 cursor-pointer text-sm lg:text-base"
             >
               <History className="mr-3 h-4 w-4" />
               Past Pitches
             </Button>
-            <Button variant="ghost" className="w-full justify-start text-gray-600">
-              <BarChart3 className="mr-3 h-4 w-4" />
-              Analytics
-            </Button>
-            <Button variant="ghost" className="w-full justify-start text-gray-600">
-              <Settings className="mr-3 h-4 w-4" />
-              Settings
-            </Button>
-            <Button variant="ghost" className="w-full justify-start text-gray-600">
-              <HelpCircle className="mr-3 h-4 w-4" />
-              Help
-            </Button>
           </div>
 
           {/* User Profile */}
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-border mt-auto">
             <div className="flex items-center space-x-3 p-2">
-              <div className="p-2 bg-gray-100 rounded-full">
-                <User className="h-4 w-4 text-gray-600" />
+              <div className="p-2 bg-accent rounded-full">
+                <User className="h-4 w-4 text-accent-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   User Profile
                 </p>
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {userId ? userId.slice(0, 8) + '...' : 'Loading...'}
                 </p>
               </div>
@@ -174,7 +181,7 @@ export default function PastPitchesPage() {
             <Button
               onClick={handleLogout}
               variant="ghost"
-              className="w-full justify-start text-red-600 hover:bg-red-50 mt-2"
+              className="w-full justify-start text-destructive hover:bg-destructive/10 mt-2 cursor-pointer text-sm lg:text-base"
             >
               <LogOut className="mr-3 h-4 w-4" />
               Logout
@@ -186,33 +193,51 @@ export default function PastPitchesPage() {
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto">
-          <div className="max-w-6xl mx-auto p-6">
+          <div className="max-w-6xl mx-auto p-4 sm:p-6 w-full">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
               <div className="flex items-center space-x-4">
-                <Link href="/pitch">
-                  <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+                <Link href="/pitch" className="hidden sm:block">
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground cursor-pointer">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to New Pitch
                   </Button>
                 </Link>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Past Pitches</h1>
-                  <p className="text-gray-600">View and manage all your generated pitches</p>
+                  <h1 className="text-xl lg:text-2xl font-bold text-foreground">Past Pitches</h1>
+                  <p className="text-sm lg:text-base text-gray-600">View and manage all your generated pitches</p>
                 </div>
               </div>
             </div>
 
+            {/* Mobile Back Button */}
+            <div className="sm:hidden mb-4">
+              <Link href="/pitch">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground cursor-pointer">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to New Pitch
+                </Button>
+              </Link>
+            </div>
+
             {/* Search Bar */}
             <div className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <div className="relative w-full max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   type="text"
                   placeholder="Search your pitches..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full max-w-md"
+                  className="pl-10 pr-4 py-2 w-full bg-background/50 backdrop-blur-sm"
                 />
               </div>
             </div>
@@ -255,12 +280,12 @@ export default function PastPitchesPage() {
             {!loading && filteredPitches.length > 0 && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-base lg:text-lg font-semibold text-gray-900">
                     {filteredPitches.length} {filteredPitches.length === 1 ? 'Pitch' : 'Pitches'} Found
                   </h2>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredPitches.map((pitch, index) => {
                     // Safely access response data with fallbacks
                     const response = pitch.response || {};
@@ -290,29 +315,31 @@ export default function PastPitchesPage() {
                       >
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between">
-                            <CardTitle className="text-base font-medium text-blue-600 line-clamp-2">
+                            <CardTitle className="text-sm lg:text-base font-medium text-blue-600 line-clamp-2">
                               {title}
                             </CardTitle>
-                            <Badge variant="outline" className="text-xs ml-2">
+                            <Badge variant="outline" className="text-xs ml-2 flex-shrink-0">
                               {index < 3 ? 'Recent' : 'Older'}
                             </Badge>
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <CardDescription className="line-clamp-3 mb-3">
+                          <CardDescription className="line-clamp-3 mb-3 text-sm">
                             {problem || pitch.idea}
                           </CardDescription>
                           <div className="flex items-center justify-between text-xs text-gray-500">
-                            <div className="flex items-center">
-                              <Calendar className="mr-1 h-3 w-3" />
-                              {pitch.createdAt 
-                                ? new Date(pitch.createdAt).toLocaleDateString()
-                                : new Date().toLocaleDateString()
-                              }
+                            <div className="flex items-center min-w-0 flex-1">
+                              <Calendar className="mr-1 h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">
+                                {pitch.createdAt 
+                                  ? new Date(pitch.createdAt).toLocaleDateString()
+                                  : new Date().toLocaleDateString()
+                                }
+                              </span>
                             </div>
-                            <Button variant="ghost" size="sm" className="h-6 px-2 text-blue-600 hover:text-blue-700">
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-blue-600 hover:text-blue-700 cursor-pointer flex-shrink-0 ml-2">
                               <Eye className="mr-1 h-3 w-3" />
-                              View
+                              <span className="hidden sm:inline">View</span>
                             </Button>
                           </div>
                         </CardContent>
@@ -327,31 +354,31 @@ export default function PastPitchesPage() {
             {selectedPitch && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                 <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-bold text-gray-900">
+                  <div className="p-4 lg:p-6">
+                    <div className="flex items-center justify-between mb-4 lg:mb-6">
+                      <h2 className="text-lg lg:text-2xl font-bold text-gray-900 pr-4">
                         {selectedPitch.response?.title || selectedPitch.idea || 'App Name'}
                       </h2>
                       <Button
                         variant="ghost"
                         onClick={() => setSelectedPitch(null)}
-                        className="text-gray-500 hover:text-gray-700"
+                        className="text-gray-500 hover:text-gray-700 flex-shrink-0"
                       >
-                        ✕
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
 
-                    <div className="grid gap-6">
+                    <div className="grid gap-4 lg:gap-6">
                       {/* Problem Section */}
                       <Card>
                         <CardHeader className="pb-3">
-                          <CardTitle className="flex items-center gap-2 text-lg">
-                            <Lightbulb className="h-5 w-5 text-amber-500" />
+                          <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                            <Lightbulb className="h-4 w-4 lg:h-5 lg:w-5 text-amber-500" />
                             Problem
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-700 leading-relaxed">
+                          <p className="text-gray-700 leading-relaxed text-sm lg:text-base">
                             {selectedPitch.response?.problem || "No problem description available"}
                           </p>
                         </CardContent>
@@ -360,13 +387,13 @@ export default function PastPitchesPage() {
                       {/* Solution Section */}
                       <Card>
                         <CardHeader className="pb-3">
-                          <CardTitle className="flex items-center gap-2 text-lg">
-                            <Zap className="h-5 w-5 text-green-500" />
+                          <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                            <Zap className="h-4 w-4 lg:h-5 lg:w-5 text-green-500" />
                             Solution
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-700 leading-relaxed">
+                          <p className="text-gray-700 leading-relaxed text-sm lg:text-base">
                             {selectedPitch.response?.solution || "No solution description available"}
                           </p>
                         </CardContent>
@@ -375,13 +402,13 @@ export default function PastPitchesPage() {
                       {/* Target Market Section */}
                       <Card>
                         <CardHeader className="pb-3">
-                          <CardTitle className="flex items-center gap-2 text-lg">
-                            <Users className="h-5 w-5 text-blue-500" />
+                          <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                            <Users className="h-4 w-4 lg:h-5 lg:w-5 text-blue-500" />
                             Target Market
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-700 leading-relaxed">
+                          <p className="text-gray-700 leading-relaxed text-sm lg:text-base">
                             {selectedPitch.response?.targetMarket || "No target market information available"}
                           </p>
                         </CardContent>
@@ -390,13 +417,13 @@ export default function PastPitchesPage() {
                       {/* Revenue Model Section */}
                       <Card>
                         <CardHeader className="pb-3">
-                          <CardTitle className="flex items-center gap-2 text-lg">
-                            <DollarSign className="h-5 w-5 text-emerald-500" />
+                          <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                            <DollarSign className="h-4 w-4 lg:h-5 lg:w-5 text-emerald-500" />
                             Revenue Model
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-700 leading-relaxed">
+                          <p className="text-gray-700 leading-relaxed text-sm lg:text-base">
                             {selectedPitch.response?.revenueModel || "No revenue model information available"}
                           </p>
                         </CardContent>
@@ -405,17 +432,26 @@ export default function PastPitchesPage() {
                       {/* Call to Action Section */}
                       <Card>
                         <CardHeader className="pb-3">
-                          <CardTitle className="flex items-center gap-2 text-lg">
-                            <Target className="h-5 w-5 text-purple-500" />
+                          <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                            <Target className="h-4 w-4 lg:h-5 lg:w-5 text-purple-500" />
                             Call to Action
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-700 leading-relaxed">
+                          <p className="text-gray-700 leading-relaxed text-sm lg:text-base">
                             {selectedPitch.response?.callToAction || "No call to action available"}
                           </p>
                         </CardContent>
                       </Card>
+                    </div>
+
+                    <div className="mt-4 lg:mt-6 flex justify-end">
+                      <Button
+                        onClick={() => setSelectedPitch(null)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Close
+                      </Button>
                     </div>
                   </div>
                 </div>

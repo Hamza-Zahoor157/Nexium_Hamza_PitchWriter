@@ -29,9 +29,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-md dark:bg-slate-900/80">
+      <header className="border-b bg-background/80 backdrop-blur-md">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -58,8 +58,8 @@ export default function LoginPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
-        <div className="max-w-md mx-auto">
+      <main className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="max-w-md w-full mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center p-3 bg-blue-500 rounded-full mb-4">
@@ -74,7 +74,7 @@ export default function LoginPage() {
           </div>
 
           {/* Login Card */}
-          <Card className="shadow-xl border-0 bg-white/70 backdrop-blur-sm dark:bg-slate-800/70">
+          <Card className="shadow-xl border-0 bg-card/70 backdrop-blur-sm">
             <CardHeader className="text-center pb-4">
               <CardTitle className="flex items-center justify-center gap-2 text-slate-900 dark:text-slate-100">
                 <PenTool className="h-5 w-5 text-blue-500" />
@@ -116,7 +116,7 @@ export default function LoginPage() {
                   <Button
                     onClick={handleLogin}
                     disabled={loading || !email}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer"
                   >
                     {loading ? (
                       <>
@@ -158,7 +158,7 @@ export default function LoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-white/80 backdrop-blur-md dark:bg-slate-900/80 mt-20">
+      <footer className="border-t bg-background/80 backdrop-blur-md mt-12 sm:mt-20">
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
