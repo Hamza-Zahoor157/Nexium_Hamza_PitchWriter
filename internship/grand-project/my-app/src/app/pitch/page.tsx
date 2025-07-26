@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,28 +41,6 @@ const supabase = createClient(
 )
 
 export default function PitchPage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
-      } else {
-        setIsLoading(false);
-      }
-    };
-    checkAuth();
-  }, [router]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
   const [idea, setIdea] = useState('')
   const [response, setResponse] = useState<PitchResponse | null>(null)
   const [pitches, setPitches] = useState<Array<{ _id: string; idea: string; response: PitchResponse; createdAt?: string }>>([])
