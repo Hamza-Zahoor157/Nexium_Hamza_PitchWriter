@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pitch Writer - AI-Powered Pitch Deck Generator
 
-## Getting Started
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://nexium-hamza-pitch-writer.vercel.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Hamza-Zahoor157/Nexium_Hamza_PitchWriter)
 
-First, run the development server:
+## 🚀 Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Pitch Writer is a modern, AI-powered platform that helps entrepreneurs and startups generate professional pitch decks with ease. The application leverages advanced AI to create compelling pitch content, including titles, descriptions, problem statements, solutions, and more.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Core Features
+- **AI-Powered Pitch Generation**: Generate complete pitch decks using AI
+- **Pitch Management**: Save and manage your past pitches
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Dark/Light Mode**: Toggle between themes for comfortable viewing
+- **Walkthrough Video**: [View Demo](https://nexium-hamza-pitch-writer.vercel.app/walkthrough/Pitch%20Writer%20Walkthrough.mp4) - See the app in action with our comprehensive walkthrough video
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Technical Features
+- **Next.js 15**: Built with the latest React framework
+- **TypeScript**: Type-safe codebase for better developer experience
+- **MongoDB**: Scalable database for storing pitch data
+- **Supabase**: Authentication with magic link
+- **n8n Workflows**: Automated workflow management via Railway
+- **Shadcn UI**: Beautiful, accessible UI components
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **Database**: MongoDB
+- **Authentication**: Supabase
+- **AI Integration**: Custom AI workflows via n8n
+- **Deployment**: Vercel (Frontend), Railway (n8n)
+- **Styling**: Tailwind CSS, Shadcn UI
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Getting Started
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Prerequisites
 
-## Deploy on Vercel
+- Node.js 16.8 or later
+- npm or yarn
+- MongoDB Atlas account
+- Vercel account (for deployment)
+- Railway account (for n8n)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Local Development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Hamza-Zahoor157/Nexium_Hamza_PitchWriter.git
+   cd Nexium_Hamza_PitchWriter/internship/grand-project/my-app
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory and add the following:
+   ```
+   MONGODB_URI=your_mongodb_connection_string
+   NEXTAUTH_SECRET=your_nextauth_secret
+   NEXTAUTH_URL=http://localhost:3000
+   N8N_WEBHOOK_URL=your_n8n_webhook_url
+   ```
+
+4. Run the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+
+## 🌐 Deployment
+
+### Vercel Deployment
+The frontend is deployed on Vercel. Push to the `main` branch to trigger automatic deployments.
+
+### n8n on Railway
+The n8n instance is deployed on Railway for workflow automation. The instance handles AI processing and other background tasks.
+
+## 🔄 API Endpoints
+
+- `POST /api/pitch/create` - Create a new pitch
+- `GET /api/pitch/user/[id]` - Get pitches for a specific user
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - The React Framework for Production
+- [MongoDB](https://www.mongodb.com/) - The database for modern applications
+- [n8n](https://n8n.io/) - Workflow automation tool
+- [Shadcn UI](https://ui.shadcn.com/) - Beautifully designed components
+- [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework
