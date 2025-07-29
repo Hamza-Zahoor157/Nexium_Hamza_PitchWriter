@@ -14,7 +14,7 @@ Pitch Writer is a modern, AI-powered platform that helps entrepreneurs and start
 - **Pitch Management**: Save and manage your past pitches
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Dark/Light Mode**: Toggle between themes for comfortable viewing
-- **Walkthrough Video**: [View Demo](https://nexium-hamza-pitch-writer.vercel.app/walkthrough/Pitch%20Writer%20Walkthrough.mp4) - See the app in action with our comprehensive walkthrough video
+- **Walkthrough Video**: [View Demo on Loom](https://www.loom.com/share/88010c15ee764c158d83724a8ec1efe2) - See the app in action with our comprehensive walkthrough video
 
 ### Technical Features
 - **Next.js 15**: Built with the latest React framework
